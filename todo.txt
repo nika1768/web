@@ -1,0 +1,2 @@
+pri prichode na stranku je zaskrtnute pero, ale nefunguje
+pri kresleni polygonu snapuje aj keď nemá

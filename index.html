@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html lang="cs-cz">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Analyser</title>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+</head>
+
+<body>
+    <select id="videoSelector">
+        <option value="001_Canon_FHD.MP4">001_Canon_FHD.MP4</option>
+        <option value="002_Canon_FHD.MP4">002_Canon_FHD.MP4</option>
+        <option value="duke.mp4">duke.mp4</option>
+        <option value="orloj.mp4">orloj.mp4</option>
+    </select>
+
+    <input id="selectVideoButton" type="button" onclick="SelectVideo()" value="Select"></input>
+
+    <input id="clearVideoButton" type="button" onclick="StopVideo()" value="Clear"></input>
+
+    <form name="radioForm">
+        <!-- Types of drawing -->
+        <input type="radio" id="penRadio" name="typeOfdrawing" value="pen" checked="checked">
+        <label for="pen">Pen</label><br>
+        <input type="radio" id="lineRadio" name="typeOfdrawing" value="line">
+        <label for="line">Line</label><br>
+        <input type="radio" id="polygonRadio" name="typeOfdrawing" value="polygon">
+        <label for="polygon">Polygon</label>
+    </form>
+
+    <div id="canvasWrapper" class="container">
+            <canvas height="378" width="672" id="imageCanvas"></canvas>
+            <canvas height="378" width="672" id="permanentCanvas"></canvas>
+            <canvas height="378" width="672" id="interactiveCanvas"></canvas>
+    </div>
+
+    <div id="layerManager" style="padding-left:690px">
+        <div id="layerManagerMenu">
+            <input type="button" value="Add Layer" onclick="addLayer()" />
+        </div>
+        <ul id="layerList">
+            <li class="layerItem selected" layer="0">Layer0</li>
+        </ul>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript" src="scripts.js"></script>
+
+</body>
+
+</html>

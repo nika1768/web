@@ -1,0 +1,24 @@
+canvas{
+    display: block;
+    height: 378px;
+    width:  672px;
+
+    border:  1px solid black;
+    margin-top: 5%;
+    margin-left: auto;
+    margin-right: auto;
+
+    cursor: crosshair;
+}
+
+canvas {
+    position: absolute;
+}
+
+.layerItem {
+    cursor: pointer;
+}
+
+.selected {
+    background-color: lightseagreen;
+}
