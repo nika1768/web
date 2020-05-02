@@ -18,7 +18,7 @@
 
     <input id="selectVideoButton" type="button" onclick="SelectVideo()" value="Select"></input>
 
-    <input id="clearVideoButton" type="button" onclick="StopVideo()" value="Clear"></input>
+    <input id="clearVideoButton" type="button" onclick="ClearCanvas()" value="Clear"></input>
 
     <form name="radioForm">
         <!-- Types of drawing -->
@@ -32,8 +32,8 @@
 
     <div id="canvasWrapper" class="container">
             <canvas height="378" width="672" id="imageCanvas"></canvas>
-            <canvas height="378" width="672" id="permanentCanvas"></canvas>
             <canvas height="378" width="672" id="interactiveCanvas"></canvas>
+            <canvas height="378" width="672" class="layerCanvas" layer="0"></canvas>
     </div>
 
     <div id="layerManager" style="padding-left:690px">

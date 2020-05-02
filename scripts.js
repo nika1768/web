@@ -1,58 +1,12 @@
-$(document).ready(function () {
-    Switch("pen");
-})
-
-// Key Manager
-
-let isShiftDown = false;
-let isCtrlDown = false;
-
-$(document).keydown(function (e) {
-    if (e.key == "Shift") isShiftDown = true;
-    if (e.key == "Control") isCtrlDown = true;
-})
-
-$(document).keyup(function (e) {
-    if (e.key == "Shift") isShiftDown = false;
-    if (e.key == "Control") isCtrlDown = false;
-})
-
-// Key Manager End
-
-function SelectVideo() {
-    let selectVideoButton = document.getElementById("selectVideoButton");
-    let videoSelector = document.getElementById("videoSelector");
-    selectVideoButton.disabled = true;
-    videoSelector.disabled = true;
-    Clear();
-
-    image.onload = function () {
-        imageContext.drawImage(this, 0, 0, imageCanvas.width, imageCanvas.height);
-
-        selectVideoButton.disabled = false;
-        videoSelector.disabled = false;
-    }
-
-    image.src = "http://195.113.19.174/camera.php?name=" + videoSelector.value;
-}
-
-function StopVideo() {
-    Clear();
-}
-
-function Clear() {
-    permanentContext.clearRect(0, 0, permanentCanvas.width, permanentCanvas.height);
-    interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
-}
-
+// Constants:
+const canvasWidth = 672;
+const canvasHeight = 378;
 
 // Variables:
 let imageCanvas = document.getElementById("imageCanvas");
-let permanentCanvas = document.getElementById("permanentCanvas");
 let interactiveCanvas = document.getElementById("interactiveCanvas");
 
 let imageContext = imageCanvas.getContext("2d");
-let permanentContext = permanentCanvas.getContext("2d");
 let interactiveContext = interactiveCanvas.getContext("2d");
 
 let image = new Image();
@@ -74,7 +28,27 @@ let previousRadioButton = null;
 
 let isMouseDown = false;
 
-// Code:
+// Key Manager
+
+let isShiftDown = false;
+let isCtrlDown = false;
+
+$(document).keydown(function (e) {
+    if (e.key == "Shift") isShiftDown = true;
+    if (e.key == "Control") isCtrlDown = true;
+})
+
+$(document).keyup(function (e) {
+    if (e.key == "Shift") isShiftDown = false;
+    if (e.key == "Control") isCtrlDown = false;
+})
+
+// Key Manager End
+
+
+$(document).ready(function () {
+    Switch("pen");
+})
 
 $('form input[type="radio"]').each(function () {
     this.addEventListener('change', function () {
@@ -83,9 +57,53 @@ $('form input[type="radio"]').each(function () {
     })
 })
 
+function SelectVideo() {
+    let selectVideoButton = document.getElementById("selectVideoButton");
+    let videoSelector = document.getElementById("videoSelector");
+    selectVideoButton.disabled = true;
+    videoSelector.disabled = true;
+    //ClearPermanentLayer();
+    //DeleteLayers();
+
+    image.onload = function () {
+        imageContext.drawImage(this, 0, 0, canvasWidth, canvasHeight);
+
+        selectVideoButton.disabled = false;
+        videoSelector.disabled = false;
+    }
+
+    image.src = "http://195.113.19.174/camera.php?name=" + videoSelector.value;
+}
+
+function ClearPermanentLayer() {
+    // TODO
+}
+
+function ClearCanvas() {
+    ClearInteractiveLayer();
+    ClearLayers();
+}
+
+function ClearInteractiveLayer() {
+    interactiveContext.clearRect(0, 0, canvasWidth, canvasHeight);
+}
+
+/**
+ * Clear layer canvases.
+ * @param {number[]} idxs Indexes of layers to clear.
+ */
+function ClearLayers(idxs) {
+    if (!idxs)
+        idxs = [...Array(layerCount).keys()]
+
+    for (idx of idxs)
+        canvases[idx][0].getContext("2d").clearRect(0, 0, canvasWidth, canvasHeight);
+}
+
 function Switch(typeOfdrawing) {
-    interactiveContext.clearRect(0,0,interactiveCanvas.width,interactiveCanvas.height);
+    ClearLayers();
     wasFirstClick = false;
+    console.log("in switch");
 
     // remove all
     interactiveCanvas.removeEventListener('mousedown', onMouseClickLine);
@@ -100,11 +118,14 @@ function Switch(typeOfdrawing) {
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePolygon);
     interactiveCanvas.removeEventListener('mouseup', onMouseUpPolygon);
 
+    console.log("event listeners removed");
+
     switch (typeOfdrawing) {
         case "pen":
             interactiveCanvas.addEventListener('mousedown', onMouseDownPen);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePen);
             interactiveCanvas.addEventListener('mouseup', onMouseUpPen);
+            console.log("pen set");
             break;
         case "line":
             interactiveCanvas.addEventListener('mousedown', onMouseClickLine);
@@ -124,7 +145,7 @@ function Switch(typeOfdrawing) {
 function onMouseClickLine(e) {
 
     // set up current x, y
-    let rect = permanentCanvas.getBoundingClientRect();
+    let rect = activeCanvas.getBoundingClientRect();
     let x = event.clientX - rect.left;
     let y = event.clientY - rect.top;
     console.log("Coordinate x: " + x,
@@ -138,16 +159,17 @@ function onMouseClickLine(e) {
     }
     else {
         // draw a line from the initiating point
-        permanentContext.beginPath();
-        permanentContext.moveTo(fx, fy);
-        permanentContext.lineTo(x, y);
-        permanentContext.closePath();
-        permanentContext.stroke();
+        activeContext.beginPath();
+        activeContext.moveTo(fx, fy);
+        activeContext.lineTo(x, y);
+        activeContext.closePath();
+        activeContext.stroke();
         wasFirstClick = false;
     }
 }
 
 function onMouseUpdateLine(e) {
+    console.log("in mouse move line");
     if (wasFirstClick) {
         interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
         let rect = interactiveCanvas.getBoundingClientRect();
@@ -165,20 +187,24 @@ function onMouseUpdateLine(e) {
 // Pen
 
 function onMouseDownPen(e) {
+    console.log("in mouse down pen");
     isMouseDown = true;
     [fx, fy] = [e.offsetX, e.offsetY];
 }
 function onMouseUpPen(e) {
+    console.log("in mouse up pen");
     isMouseDown = false;
 }
 function onMouseMovePen(e) {
+    console.log("in mouse move pen");
     if (isMouseDown) {
         const newX = e.offsetX;
         const newY = e.offsetY;
-        permanentContext.beginPath();
-        permanentContext.moveTo(fx, fy);
-        permanentContext.lineTo(newX, newY);
-        permanentContext.stroke();
+        console.log("in mouse move pen");
+        activeContext.beginPath();
+        activeContext.moveTo(fx, fy);
+        activeContext.lineTo(newX, newY);
+        activeContext.stroke();
         //[x, y] = [newX, newY];
         fx = newX;
         fy = newY;
@@ -189,11 +215,11 @@ function onMouseMovePen(e) {
 // Polygon
 
 function onMouseDownPolygon(e) {
-    let rect = permanentCanvas.getBoundingClientRect();
+    let rect = activeCanvas.getBoundingClientRect();
     let x = event.clientX - rect.left;
     let y = event.clientY - rect.top;
     console.log("Coordinate x: " + x,
-        "Coordinate y: " + y);
+                "Coordinate y: " + y);
     if (!wasFirstClick) {
         // if beginning to make a polygon, save initial point of the polygon
         [px, py] = [x, y];
@@ -214,11 +240,11 @@ function onMouseDownPolygon(e) {
             interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
         }
 
-        permanentContext.beginPath();
-        permanentContext.moveTo(fx, fy);
-        permanentContext.lineTo(x, y);
-        permanentContext.closePath();
-        permanentContext.stroke();
+        activeContext.beginPath();
+        activeContext.moveTo(fx, fy);
+        activeContext.lineTo(x, y);
+        activeContext.closePath();
+        activeContext.stroke();
         [fx, fy] = [x, y];
     }
 }
@@ -251,37 +277,50 @@ function onMouseMovePolygon(e) {
     }
 }
 
-// layer logick
+// layer logic
 
 let layerCount = 1;
+/** Layer onto which it is currently drawn. */
+let activeLayerIdx = 0;
+/** List of indexes which are currently selected in the layer manager. */
 let selectedLayerIdxs = [0];
+/** List of <li> elements in the layer manager. */
 let layers = [$(".layerItem")];
+/** List of interactive (drawable) <canvas>. */
 let canvases = [$(".layerCanvas")];
-$("#layerList").on('click',".layerItem",function(){
+
+let activeCanvas = canvases[activeLayerIdx][0];
+let activeContext = activeCanvas.getContext("2d");
+
+$("#layerList").on('click', ".layerItem", function () {
     selectLayer($(this).attr("layer"));
 })
 
-function addLayer()
-{
+function addLayer() {
     let newLayerItem = $(`<li>Layer${layerCount}</li>`)
-                        .addClass("layerItem")
-                        .attr("layer",layerCount);
+        .addClass("layerItem")
+        .attr("layer", layerCount);
     layers.push(newLayerItem);
     $("#layerList").append(newLayerItem);
+
+    let newLayerCanvas = $("<canvas></canvas>")
+        .addClass("layerCanvas")
+        .attr("layer", layerCount);
+        // width, height
+    canvases.push(newLayerCanvas);
+    $("#canvasWrapper").append(newLayerCanvas);
 
     layerCount++;
 }
 
-function selectLayer(layerIdx)
-{
-    if(isCtrlDown)
-    {
+function selectLayer(layerIdx) {
+    // z index
+    if (isCtrlDown) {
         layers[layerIdx].addClass("selected");
         selectedLayerIdxs.push(layerIdx);
     }
-    else
-    {
-        for(let idx of selectedLayerIdxs)
+    else {
+        for (let idx of selectedLayerIdxs)
             layers[idx].removeClass("selected");
         layers[layerIdx].addClass("selected");
         selectedLayerIdxs = [layerIdx];
