@@ -18,7 +18,7 @@
 
     <input id="selectVideoButton" type="button" onclick="selectVideo()" value="Select"></input>
 
-    <input id="clearVideoButton" type="button" onclick="clearCanvas()" value="Clear"></input>
+    <input id="clearVideoButton" type="button" onclick="clearCanvas()" value="Clear All"></input>
 
     <form name="radioForm">
         <!-- Types of drawing -->
@@ -41,7 +41,7 @@
     <div id="layerManager" style="padding-left:690px">
         <div id="layerManagerMenu">
             <input type="button" value="Add Layer" onclick="addLayer()"/>
-            <input type="button" value="Remove Selected Layers" onclick="removeSelectedLayers()"/>
+            <input type="button" value="Remove Selected Layers" onclick="removeLayers(selectedLayerIdxs)"/>
         </div>
         <ul id="layerList">
             <li class="layerItem selected" layer="0">Layer0</li>

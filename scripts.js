@@ -28,27 +28,6 @@ let previousRadioButton = null;
 
 let isMouseDown = false;
 
-// Key Manager
-
-let isShiftDown = false;
-let isCtrlDown = false;
-
-$(document).keydown(function (e) {
-    if (e.key == "Shift") isShiftDown = true;
-    if (e.key == "Control") isCtrlDown = true;
-})
-
-$(document).keyup(function (e) {
-    if (e.key == "Shift") isShiftDown = false;
-    if (e.key == "Control") isCtrlDown = false;
-})
-
-// Key Manager End
-
-
-// layer logic
-// NOTE: Move here since it's undefined otherwise in the code below.
-
 let layerCount = 1;
 /** Layer onto which it is currently drawn. */
 let activeLayerIdx = 0;
@@ -63,7 +42,22 @@ let activeCanvas = canvases[activeLayerIdx][0];
 let activeContext = activeCanvas.getContext("2d");
 
 $("#layerList").on('click', ".layerItem", function () {
-    selectLayer($(this).attr("layer"));
+    selectLayer(parseInt($(this).attr("layer")));
+})
+
+// Key Manager
+
+let isShiftDown = false;
+let isCtrlDown = false;
+
+$(document).keydown(function (e) {
+    if (e.key == "Shift") isShiftDown = true;
+    if (e.key == "Control") isCtrlDown = true;
+})
+
+$(document).keyup(function (e) {
+    if (e.key == "Shift") isShiftDown = false;
+    if (e.key == "Control") isCtrlDown = false;
 })
 
 
@@ -118,7 +112,7 @@ function clearLayers(idxs) {
 }
 
 function switchType(typeOfdrawing) {
-    clearCanvas();
+    //clearCanvas();
 
     // remove all event listeners
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPen);
@@ -168,9 +162,11 @@ function onMouseDownPen(e) {
     const rect = activeCanvas.getBoundingClientRect();
     [fx, fy] = [e.clientX - rect.left, e.clientY - rect.top];
 }
+
 function onMouseUpPen(e) {
     isMouseDown = false;
 }
+
 function onMouseMovePen(e) {
     if (isMouseDown) {
         const rect = activeCanvas.getBoundingClientRect();
@@ -201,6 +197,8 @@ function onMouseDownLine(e) {
         wasFirstClick = true;
     }
     else {
+        interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
+
         // draw a line from the initiating point
         activeContext.beginPath();
         activeContext.moveTo(fx, fy);
@@ -238,8 +236,10 @@ function onMouseDownLines(e) {
         wasFirstClick = true;
     }
     else {
-        if (isShiftDown)
+        if (isShiftDown) {
             wasFirstClick = false;
+            interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
+        }
 
         activeContext.beginPath();
         activeContext.moveTo(fx, fy);
@@ -334,7 +334,7 @@ function onMouseMovePolygon(e) {
 }
 
 function addLayer() {
-    let newLayerItem = $(`<li>Layer${layerCount}</li>`) 
+    let newLayerItem = $(`<li>Layer${layerCount}</li>`)
         .addClass("layerItem")
         .attr("layer", layerCount);
     layers.push(newLayerItem);
@@ -343,10 +343,8 @@ function addLayer() {
     let newLayerCanvas = $("<canvas></canvas>")
         .addClass("layerCanvas")
         .attr("layer", layerCount)
-        //NOTE: Here you need width and height or it gets screwed up. I suppose if you removed these and instead added border, you'd see discrepancies between canvas sizes.
-        .attr("width",canvasWidth)
-        .attr("height",canvasHeight);
-    // width, height
+        .attr("width", canvasWidth)
+        .attr("height", canvasHeight);
     canvases.push(newLayerCanvas);
     $("#canvasWrapper").append(newLayerCanvas);
 
@@ -361,7 +359,8 @@ function selectLayer(layerIdx) {
     else {
         for (let idx of selectedLayerIdxs)
             layers[idx].removeClass("selected");
-        // NOTE: Switch active canvas and context
+
+        // switch active canvas and context
         activeCanvas = canvases[layerIdx][0]; // [0] to get HTMLElement from jQueryElement
         activeContext = activeCanvas.getContext("2d");
         layers[layerIdx].addClass("selected");
@@ -370,21 +369,5 @@ function selectLayer(layerIdx) {
 }
 
 function removeLayers(idxs) {
-    if (!idxs)
-        idxs = [...Array(layerCount).keys()]
 
-    // remove html elements
-    for (idx of idxs) {
-        // NOTE: You can remove also the 0-th layer. It's just there to begin with, but is not special in any way.
-        layers[idx].remove();
-        canvases[idx].remove();
-    }
-
-    layers[0].addClass("selected");
-    selectedLayerIdxs = [0];
-}
-
-function removeSelectedLayers() {
-    //NOTE: if called this way, there will always be at least one layer selected. You can safely call "removeLayers(selectedLayerIdxs)" even from .html directly.
-    removeLayers(selectedLayerIdxs);
 }
