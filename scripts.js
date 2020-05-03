@@ -47,27 +47,26 @@ $(document).keyup(function (e) {
 
 
 $(document).ready(function () {
-    Switch("pen");
+    switchType("pen");
 })
 
 $('form input[type="radio"]').each(function () {
     this.addEventListener('change', function () {
-        Switch(this.value);
+        switchType(this.value);
         console.log(this.value);
     })
 })
 
-function SelectVideo() {
+function selectVideo() {
     let selectVideoButton = document.getElementById("selectVideoButton");
     let videoSelector = document.getElementById("videoSelector");
     selectVideoButton.disabled = true;
     videoSelector.disabled = true;
-    //ClearPermanentLayer();
-    //DeleteLayers();
+    clearCanvas();
+    removeLayers();
 
     image.onload = function () {
         imageContext.drawImage(this, 0, 0, canvasWidth, canvasHeight);
-
         selectVideoButton.disabled = false;
         videoSelector.disabled = false;
     }
@@ -75,16 +74,13 @@ function SelectVideo() {
     image.src = "http://195.113.19.174/camera.php?name=" + videoSelector.value;
 }
 
-function ClearPermanentLayer() {
-    // TODO
+function clearCanvas() {
+    clearInteractiveLayer();
+    clearLayers();
+    wasFirstClick = false;
 }
 
-function ClearCanvas() {
-    ClearInteractiveLayer();
-    ClearLayers();
-}
-
-function ClearInteractiveLayer() {
+function clearInteractiveLayer() {
     interactiveContext.clearRect(0, 0, canvasWidth, canvasHeight);
 }
 
@@ -92,7 +88,7 @@ function ClearInteractiveLayer() {
  * Clear layer canvases.
  * @param {number[]} idxs Indexes of layers to clear.
  */
-function ClearLayers(idxs) {
+function clearLayers(idxs) {
     if (!idxs)
         idxs = [...Array(layerCount).keys()]
 
@@ -100,61 +96,87 @@ function ClearLayers(idxs) {
         canvases[idx][0].getContext("2d").clearRect(0, 0, canvasWidth, canvasHeight);
 }
 
-function Switch(typeOfdrawing) {
-    ClearLayers();
-    wasFirstClick = false;
-    console.log("in switch");
+function switchType(typeOfdrawing) {
+    clearCanvas();
 
-    // remove all
-    interactiveCanvas.removeEventListener('mousedown', onMouseClickLine);
-    interactiveCanvas.removeEventListener('mousemove', onMouseUpdateLine);
-    interactiveCanvas.removeEventListener('mouseenter', onMouseUpdateLine);
-
+    // remove all event listeners
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPen);
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePen);
     interactiveCanvas.removeEventListener('mouseup', onMouseUpPen);
 
+    interactiveCanvas.removeEventListener('mousedown', onMouseDownLine);
+    interactiveCanvas.removeEventListener('mousemove', onMouseUpdateLine);
+    //interactiveCanvas.removeEventListener('mouseenter', onMouseUpdateLine);
+
+    interactiveCanvas.removeEventListener('mousedown', onMouseDownLines);
+    interactiveCanvas.removeEventListener('mousemove', onMouseMoveLines);
+    //interactiveCanvas.removeEventListener('mouseup', onMouseUpLines);
+
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPolygon);
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePolygon);
-    interactiveCanvas.removeEventListener('mouseup', onMouseUpPolygon);
-
-    console.log("event listeners removed");
+    //interactiveCanvas.removeEventListener('mouseup', onMouseUpPolygon);
 
     switch (typeOfdrawing) {
         case "pen":
             interactiveCanvas.addEventListener('mousedown', onMouseDownPen);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePen);
             interactiveCanvas.addEventListener('mouseup', onMouseUpPen);
-            console.log("pen set");
             break;
         case "line":
-            interactiveCanvas.addEventListener('mousedown', onMouseClickLine);
+            interactiveCanvas.addEventListener('mousedown', onMouseDownLine);
             interactiveCanvas.addEventListener('mousemove', onMouseUpdateLine);
-            interactiveCanvas.addEventListener('mouseenter', onMouseUpdateLine);
+            //interactiveCanvas.addEventListener('mouseenter', onMouseUpdateLine);
+            break;
+        case "lines":
+            interactiveCanvas.addEventListener('mousedown', onMouseDownLines);
+            interactiveCanvas.addEventListener('mousemove', onMouseMoveLines);
+            //interactiveCanvas.addEventListener('mouseup', onMouseUpLines);
             break;
         case "polygon":
             interactiveCanvas.addEventListener('mousedown', onMouseDownPolygon);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePolygon);
-            interactiveCanvas.addEventListener('mouseup', onMouseUpPolygon);
+            //interactiveCanvas.addEventListener('mouseup', onMouseUpPolygon);
             break;
+    }
+}
+
+// Pen
+
+function onMouseDownPen(e) {
+    isMouseDown = true;
+    const rect = activeCanvas.getBoundingClientRect();
+    [fx, fy] = [e.clientX - rect.left, e.clientY - rect.top];
+}
+function onMouseUpPen(e) {
+    isMouseDown = false;
+}
+function onMouseMovePen(e) {
+    if (isMouseDown) {
+        const rect = activeCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        activeContext.beginPath();
+        activeContext.moveTo(fx, fy);
+        activeContext.lineTo(x, y);
+        activeContext.stroke();
+        [fx, fy] = [x, y];
+        //console.log(fx, fy);
     }
 }
 
 // Line
 
-function onMouseClickLine(e) {
+function onMouseDownLine(e) {
 
     // set up current x, y
-    let rect = activeCanvas.getBoundingClientRect();
-    let x = event.clientX - rect.left;
-    let y = event.clientY - rect.top;
-    console.log("Coordinate x: " + x,
-        "Coordinate y: " + y);
+    const rect = activeCanvas.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    //console.log("Coordinate x: " + x, "Coordinate y: " + y);
 
     if (!wasFirstClick) {
         // create initiating point
-        fx = x;
-        fy = y;
+        [fx, fy] = [x, y];
         wasFirstClick = true;
     }
     else {
@@ -169,12 +191,11 @@ function onMouseClickLine(e) {
 }
 
 function onMouseUpdateLine(e) {
-    console.log("in mouse move line");
     if (wasFirstClick) {
         interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
-        let rect = interactiveCanvas.getBoundingClientRect();
-        let x = event.clientX - rect.left;
-        let y = event.clientY - rect.top;
+        const rect = interactiveCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
 
         interactiveContext.beginPath();
         interactiveContext.moveTo(fx, fy);
@@ -184,42 +205,56 @@ function onMouseUpdateLine(e) {
     }
 }
 
-// Pen
+// Lines
 
-function onMouseDownPen(e) {
-    console.log("in mouse down pen");
-    isMouseDown = true;
-    [fx, fy] = [e.offsetX, e.offsetY];
-}
-function onMouseUpPen(e) {
-    console.log("in mouse up pen");
-    isMouseDown = false;
-}
-function onMouseMovePen(e) {
-    console.log("in mouse move pen");
-    if (isMouseDown) {
-        const newX = e.offsetX;
-        const newY = e.offsetY;
-        console.log("in mouse move pen");
+function onMouseDownLines(e) {
+    const rect = activeCanvas.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    if (!wasFirstClick) {
+        [fx, fy] = [x, y];
+        wasFirstClick = true;
+    }
+    else {
+        if (isShiftDown)
+            wasFirstClick = false;
+
         activeContext.beginPath();
         activeContext.moveTo(fx, fy);
-        activeContext.lineTo(newX, newY);
+        activeContext.lineTo(x, y);
+        activeContext.closePath();
         activeContext.stroke();
-        //[x, y] = [newX, newY];
-        fx = newX;
-        fy = newY;
-        console.log(fx, fy);
+        [fx, fy] = [x, y];
+    }
+}
+
+function onMouseUpLines(e) {
+    isMouseDown = false;
+}
+
+function onMouseMoveLines(e) {
+    if (wasFirstClick) {
+        interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
+        const rect = interactiveCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+
+        interactiveContext.beginPath();
+        interactiveContext.moveTo(fx, fy);
+        interactiveContext.lineTo(x, y);
+        interactiveContext.closePath();
+        interactiveContext.stroke();
     }
 }
 
 // Polygon
 
 function onMouseDownPolygon(e) {
-    let rect = activeCanvas.getBoundingClientRect();
-    let x = event.clientX - rect.left;
-    let y = event.clientY - rect.top;
-    console.log("Coordinate x: " + x,
-                "Coordinate y: " + y);
+    const rect = activeCanvas.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    //console.log("Coordinate x: " + x, "Coordinate y: " + y);
     if (!wasFirstClick) {
         // if beginning to make a polygon, save initial point of the polygon
         [px, py] = [x, y];
@@ -256,9 +291,9 @@ function onMouseUpPolygon(e) {
 function onMouseMovePolygon(e) {
     if (wasFirstClick) {
         interactiveContext.clearRect(0, 0, interactiveCanvas.width, interactiveCanvas.height);
-        let rect = interactiveCanvas.getBoundingClientRect();
-        let x = event.clientX - rect.left;
-        let y = event.clientY - rect.top;
+        const rect = interactiveCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
 
         // check if current point is close enough and shift is not pressed. snap to initial point if so
         if (px - x < pdeltax &&
@@ -276,6 +311,7 @@ function onMouseMovePolygon(e) {
         interactiveContext.stroke();
     }
 }
+
 
 // layer logic
 
@@ -306,7 +342,7 @@ function addLayer() {
     let newLayerCanvas = $("<canvas></canvas>")
         .addClass("layerCanvas")
         .attr("layer", layerCount);
-        // width, height
+    // width, height
     canvases.push(newLayerCanvas);
     $("#canvasWrapper").append(newLayerCanvas);
 
@@ -314,7 +350,6 @@ function addLayer() {
 }
 
 function selectLayer(layerIdx) {
-    // z index
     if (isCtrlDown) {
         layers[layerIdx].addClass("selected");
         selectedLayerIdxs.push(layerIdx);
@@ -322,7 +357,50 @@ function selectLayer(layerIdx) {
     else {
         for (let idx of selectedLayerIdxs)
             layers[idx].removeClass("selected");
+
         layers[layerIdx].addClass("selected");
         selectedLayerIdxs = [layerIdx];
     }
+}
+
+function removeLayers(idxs) {
+    if (!idxs)
+        idxs = [...Array(layerCount).keys()]
+
+    // remove html elements
+    for (idx of idxs) {
+        if (idx != 0) {
+            layers[idx].remove();
+            layerCount--;
+            canvases[idx].remove();
+        }
+    }
+
+    // TODO
+    layers = [$(".layerItem")];
+    canvases = [$(".layerCanvas")];
+
+    /*
+    // remove array elements
+    for (idx of idxs) {
+        if (idx != 0) {
+            layers.splice(idx, 1);
+            layerCount--;
+            canvases.splice(idx, 1);
+        }
+    }
+    */
+
+    // select layer 0
+    layers[0].addClass("selected");
+    selectedLayerIdxs = [0];
+}
+
+function removeSelectedLayers() {
+    // TODO - pouzit arraye, ktore su vytvorene
+    //$(".layerItem.selected[layer != 0]").remove();
+    //layers = [$(".layerItem")];
+    //canvases = [$(".layerCanvas")];
+
+    // TODO - select 1st layer in array
 }

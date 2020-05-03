@@ -22,3 +22,7 @@ canvas {
 .selected {
     background-color: lightseagreen;
 }
+
+#interactiveCanvas {
+    z-index: 5;
+}

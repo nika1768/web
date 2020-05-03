@@ -1,2 +1,4 @@
 undo -> vymazat poslednu vrstvu?
 kombinacia pero - ciara
+pero - vybehnutie z canvas - kresli, aj ked je mys hore
+layerCanvas styl do css

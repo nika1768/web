@@ -16,9 +16,9 @@
         <option value="orloj.mp4">orloj.mp4</option>
     </select>
 
-    <input id="selectVideoButton" type="button" onclick="SelectVideo()" value="Select"></input>
+    <input id="selectVideoButton" type="button" onclick="selectVideo()" value="Select"></input>
 
-    <input id="clearVideoButton" type="button" onclick="ClearCanvas()" value="Clear"></input>
+    <input id="clearVideoButton" type="button" onclick="clearCanvas()" value="Clear"></input>
 
     <form name="radioForm">
         <!-- Types of drawing -->
@@ -26,6 +26,8 @@
         <label for="pen">Pen</label><br>
         <input type="radio" id="lineRadio" name="typeOfdrawing" value="line">
         <label for="line">Line</label><br>
+        <input type="radio" id="linesRadio" name="typeOfdrawing" value="lines">
+        <label for="lines">Lines</label><br>
         <input type="radio" id="polygonRadio" name="typeOfdrawing" value="polygon">
         <label for="polygon">Polygon</label>
     </form>
@@ -38,7 +40,8 @@
 
     <div id="layerManager" style="padding-left:690px">
         <div id="layerManagerMenu">
-            <input type="button" value="Add Layer" onclick="addLayer()" />
+            <input type="button" value="Add Layer" onclick="addLayer()"/>
+            <input type="button" value="Remove Selected Layers" onclick="removeSelectedLayers()"/>
         </div>
         <ul id="layerList">
             <li class="layerItem selected" layer="0">Layer0</li>
