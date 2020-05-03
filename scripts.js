@@ -333,7 +333,7 @@ $("#layerList").on('click', ".layerItem", function () {
 })
 
 function addLayer() {
-    let newLayerItem = $(`<li>Layer${layerCount}</li>`)
+    let newLayerItem = $(`<li>Layer${layerCount}</li>`) 
         .addClass("layerItem")
         .attr("layer", layerCount);
     layers.push(newLayerItem);
@@ -376,31 +376,10 @@ function removeLayers(idxs) {
         }
     }
 
-    // TODO
-    layers = [$(".layerItem")];
-    canvases = [$(".layerCanvas")];
-
-    /*
-    // remove array elements
-    for (idx of idxs) {
-        if (idx != 0) {
-            layers.splice(idx, 1);
-            layerCount--;
-            canvases.splice(idx, 1);
-        }
-    }
-    */
-
-    // select layer 0
     layers[0].addClass("selected");
     selectedLayerIdxs = [0];
 }
 
 function removeSelectedLayers() {
-    // TODO - pouzit arraye, ktore su vytvorene
-    //$(".layerItem.selected[layer != 0]").remove();
-    //layers = [$(".layerItem")];
-    //canvases = [$(".layerCanvas")];
-
-    // TODO - select 1st layer in array
+    removeLayers(selectedLayerIdxs);
 }
