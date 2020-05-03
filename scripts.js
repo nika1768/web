@@ -46,6 +46,27 @@ $(document).keyup(function (e) {
 // Key Manager End
 
 
+// layer logic
+// NOTE: Move here since it's undefined otherwise in the code below.
+
+let layerCount = 1;
+/** Layer onto which it is currently drawn. */
+let activeLayerIdx = 0;
+/** List of indexes which are currently selected in the layer manager. */
+let selectedLayerIdxs = [0];
+/** List of <li> elements in the layer manager. */
+let layers = [$(".layerItem")];
+/** List of interactive (drawable) <canvas>. */
+let canvases = [$(".layerCanvas")];
+
+let activeCanvas = canvases[activeLayerIdx][0];
+let activeContext = activeCanvas.getContext("2d");
+
+$("#layerList").on('click', ".layerItem", function () {
+    selectLayer($(this).attr("layer"));
+})
+
+
 $(document).ready(function () {
     switchType("pen");
 })
@@ -312,26 +333,6 @@ function onMouseMovePolygon(e) {
     }
 }
 
-
-// layer logic
-
-let layerCount = 1;
-/** Layer onto which it is currently drawn. */
-let activeLayerIdx = 0;
-/** List of indexes which are currently selected in the layer manager. */
-let selectedLayerIdxs = [0];
-/** List of <li> elements in the layer manager. */
-let layers = [$(".layerItem")];
-/** List of interactive (drawable) <canvas>. */
-let canvases = [$(".layerCanvas")];
-
-let activeCanvas = canvases[activeLayerIdx][0];
-let activeContext = activeCanvas.getContext("2d");
-
-$("#layerList").on('click', ".layerItem", function () {
-    selectLayer($(this).attr("layer"));
-})
-
 function addLayer() {
     let newLayerItem = $(`<li>Layer${layerCount}</li>`) 
         .addClass("layerItem")
@@ -341,7 +342,10 @@ function addLayer() {
 
     let newLayerCanvas = $("<canvas></canvas>")
         .addClass("layerCanvas")
-        .attr("layer", layerCount);
+        .attr("layer", layerCount)
+        //NOTE: Here you need width and height or it gets screwed up. I suppose if you removed these and instead added border, you'd see discrepancies between canvas sizes.
+        .attr("width",canvasWidth)
+        .attr("height",canvasHeight);
     // width, height
     canvases.push(newLayerCanvas);
     $("#canvasWrapper").append(newLayerCanvas);
@@ -357,7 +361,9 @@ function selectLayer(layerIdx) {
     else {
         for (let idx of selectedLayerIdxs)
             layers[idx].removeClass("selected");
-
+        // NOTE: Switch active canvas and context
+        activeCanvas = canvases[layerIdx][0]; // [0] to get HTMLElement from jQueryElement
+        activeContext = activeCanvas.getContext("2d");
         layers[layerIdx].addClass("selected");
         selectedLayerIdxs = [layerIdx];
     }
@@ -369,11 +375,9 @@ function removeLayers(idxs) {
 
     // remove html elements
     for (idx of idxs) {
-        if (idx != 0) {
-            layers[idx].remove();
-            layerCount--;
-            canvases[idx].remove();
-        }
+        // NOTE: You can remove also the 0-th layer. It's just there to begin with, but is not special in any way.
+        layers[idx].remove();
+        canvases[idx].remove();
     }
 
     layers[0].addClass("selected");
@@ -381,5 +385,6 @@ function removeLayers(idxs) {
 }
 
 function removeSelectedLayers() {
+    //NOTE: if called this way, there will always be at least one layer selected. You can safely call "removeLayers(selectedLayerIdxs)" even from .html directly.
     removeLayers(selectedLayerIdxs);
 }
