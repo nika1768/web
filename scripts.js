@@ -62,8 +62,11 @@ $(document).keyup(function (e) {
 // Key Manager End
 
 $(document).ready(function () {
-    addLayer();
-    switchType("pen");
+    // debug:
+    //addLayer();
+    //switchType("pen");
+
+    disableButtons(true);
 })
 
 $('form input[type="radio"]').each(function () {
@@ -73,17 +76,23 @@ $('form input[type="radio"]').each(function () {
     })
 })
 
+function disableButtons(bool) {
+    document.getElementsByName("typeOfdrawing").forEach( (elem) => elem.disabled = bool);
+    document.getElementById("removeSelectedLayersBtn").disabled = bool;
+    document.getElementById("removeAllLayersBtn").disabled = bool;
+    document.getElementById("clearBtn").disabled = bool;
+}
+
 function selectVideo() {
-    let selectVideoButton = document.getElementById("selectVideoButton");
+    let selectVideoButton = document.getElementById("selectVideoBtn");
     let videoSelector = document.getElementById("videoSelector");
-    selectVideoButton.disabled = true;
-    videoSelector.disabled = true;
+    //selectVideoButton.disabled = true;
+    //videoSelector.disabled = true;
 
     layerCount = 0;
     layerNumber = 0;
 
     removeAllLayers();
-    clearCanvas();
     addLayer();
     switchType("pen");
 
@@ -96,7 +105,7 @@ function selectVideo() {
     image.src = "http://195.113.19.174/camera.php?name=" + videoSelector.value;
 }
 
-function clearCanvas() {
+function clearCanvases() {
     clearInteractiveLayer();
     clearLayers();
     wasFirstClick = false;
@@ -122,13 +131,21 @@ function clearLayers(idxs) {
 }
 
 function switchType(typeOfdrawing) {
+    // clear canvas only if the drawing was not completed
+    if (wasFirstClick) {
+        clearInteractiveLayer();
+        clearLayers(activeCanvas.getAttribute("layer"));
+        wasFirstClick = false;
+    }
+
     // remove all event listeners
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPen);
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePen);
-    interactiveCanvas.removeEventListener('mouseup', onMouseUpPen);
+    interactiveCanvas.removeEventListener('mouseup', onMouseUpOutPen);
+    interactiveCanvas.removeEventListener('mouseout', onMouseUpOutPen);
 
     interactiveCanvas.removeEventListener('mousedown', onMouseDownLine);
-    interactiveCanvas.removeEventListener('mousemove', onMouseUpdateLine);
+    interactiveCanvas.removeEventListener('mousemove', onMouseMoveLine);
 
     interactiveCanvas.removeEventListener('mousedown', onMouseDownLines);
     interactiveCanvas.removeEventListener('mousemove', onMouseMoveLines);
@@ -140,11 +157,12 @@ function switchType(typeOfdrawing) {
         case "pen":
             interactiveCanvas.addEventListener('mousedown', onMouseDownPen);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePen);
-            interactiveCanvas.addEventListener('mouseup', onMouseUpPen);
+            interactiveCanvas.addEventListener('mouseup', onMouseUpOutPen);
+            interactiveCanvas.addEventListener('mouseout', onMouseUpOutPen);
             break;
         case "line":
             interactiveCanvas.addEventListener('mousedown', onMouseDownLine);
-            interactiveCanvas.addEventListener('mousemove', onMouseUpdateLine);
+            interactiveCanvas.addEventListener('mousemove', onMouseMoveLine);
             break;
         case "lines":
             interactiveCanvas.addEventListener('mousedown', onMouseDownLines);
@@ -154,18 +172,24 @@ function switchType(typeOfdrawing) {
             interactiveCanvas.addEventListener('mousedown', onMouseDownPolygon);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePolygon);
             break;
+        default:
+            break;
     }
 }
 
 // Pen
 
 function onMouseDownPen(e) {
+    // override default behaviour - move the selection by moving the mouse
+    e.preventDefault();
     isMouseDown = true;
     const rect = activeCanvas.getBoundingClientRect();
-    [fx, fy] = [e.clientX - rect.left, e.clientY - rect.top];
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    [fx, fy] = [x, y];
 }
 
-function onMouseUpPen(e) {
+function onMouseUpOutPen(e) {
     isMouseDown = false;
 }
 
@@ -209,7 +233,7 @@ function onMouseDownLine(e) {
     }
 }
 
-function onMouseUpdateLine(e) {
+function onMouseMoveLine(e) {
     if (wasFirstClick) {
         clearInteractiveLayer();
         const rect = interactiveCanvas.getBoundingClientRect();
@@ -341,11 +365,14 @@ function addLayer() {
     $("#canvasWrapper").append(newLayerCanvas);
 
     layerCount++;
-    layerNumber++;
 
-    if (layerCount == 1) {
-        switchActiveCanvas();
+    if (layerCount >= 1) {
+        selectLayer(layerNumber);
+        switchActiveCanvas(layerNumber);
+        disableButtons(false);
     }
+
+    layerNumber++;
 }
 
 function selectLayer(layerIdx) {
@@ -363,6 +390,16 @@ function removeAllLayers() {
     $("#layerList .layerItem").remove();
     $("#canvasWrapper .layerCanvas").remove();
     layerCount = 0;
+
+    // clean up interactive layer
+    if (wasFirstClick) {
+        clearInteractiveLayer();
+        wasFirstClick = false;
+    }
+
+    // switchType with no argument to remove event listeners
+    switchType();
+    disableButtons(true);
 }
 
 function removeSelectedLayers() {
@@ -374,14 +411,25 @@ function removeSelectedLayers() {
         }
     })
 
+    // clean up interactive layer
+    if (wasFirstClick) {
+        clearInteractiveLayer();
+        wasFirstClick = false;
+    }
+
     // at least one layerItem exists - switch active canvas
     if ($("#layerList .layerItem").length) {
         switchActiveCanvas();
     }
+    else {
+        // switchType with no argument to remove event listeners
+        switchType();
+        disableButtons(true);
+    }
 }
 
 function switchActiveCanvas(layerIdx) {
-    // index is not specified
+    // index is not specified, find some index
     if (!layerIdx) {
         let layerToSelect;
         // at least one layerItem is selected - switch active canvas to the first selected one
