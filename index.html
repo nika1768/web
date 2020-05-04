@@ -33,18 +33,19 @@
     </form>
 
     <div id="canvasWrapper" class="container">
-            <canvas height="378" width="672" id="imageCanvas"></canvas>
-            <canvas height="378" width="672" id="interactiveCanvas"></canvas>
-            <canvas height="378" width="672" class="layerCanvas" layer="0"></canvas>
+            <canvas id="imageCanvas" width="672" height="378"></canvas>
+            <canvas id="interactiveCanvas" width="672" height="378"></canvas>
+            <!--<canvas class="layerCanvas" layer="0" width="672" height="378"></canvas>-->
     </div>
 
-    <div id="layerManager" style="padding-left:690px">
+    <div id="layerManager">
         <div id="layerManagerMenu">
             <input type="button" value="Add Layer" onclick="addLayer()"/>
-            <input type="button" value="Remove Selected Layers" onclick="removeLayers(selectedLayerIdxs)"/>
+            <input type="button" value="Remove Selected Layers" onclick="removeSelectedLayers()"/>
+            <input type="button" value="Remove All Layers" onclick="removeAllLayers()"/>
         </div>
         <ul id="layerList">
-            <li class="layerItem selected" layer="0">Layer0</li>
+            <!-- <li class="layerItem selected" layer="0">Layer0</li> -->
         </ul>
     </div>
 
