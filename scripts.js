@@ -400,3 +400,5 @@ function switchActiveCanvas(layerIdx) {
     activeCanvas = $(`#canvasWrapper .layerCanvas[layer = ${layerIdx}]`)[0];
     activeContext = activeCanvas.getContext("2d");
 }
+
+// :)
