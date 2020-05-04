@@ -26,3 +26,8 @@ canvas {
 #interactiveCanvas {
     z-index: 5;
 }
+
+#layerManager {
+    padding-left: 690px;
+    float: left;
+}
