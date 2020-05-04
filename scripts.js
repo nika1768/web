@@ -62,11 +62,8 @@ $(document).keyup(function (e) {
 // Key Manager End
 
 $(document).ready(function () {
-    // debug:
-    //addLayer();
-    //switchType("pen");
-
     disableButtons(true);
+    switchType("pen");
 })
 
 $('form input[type="radio"]').each(function () {
@@ -77,7 +74,7 @@ $('form input[type="radio"]').each(function () {
 })
 
 function disableButtons(bool) {
-    document.getElementsByName("typeOfdrawing").forEach( (elem) => elem.disabled = bool);
+    document.getElementsByName("typeOfdrawing").forEach((elem) => elem.disabled = bool);
     document.getElementById("removeSelectedLayersBtn").disabled = bool;
     document.getElementById("removeAllLayersBtn").disabled = bool;
     document.getElementById("clearBtn").disabled = bool;
@@ -130,15 +127,7 @@ function clearLayers(idxs) {
     }
 }
 
-function switchType(typeOfdrawing) {
-    // clear canvas only if the drawing was not completed
-    if (wasFirstClick) {
-        clearInteractiveLayer();
-        clearLayers(activeCanvas.getAttribute("layer"));
-        wasFirstClick = false;
-    }
-
-    // remove all event listeners
+function removeEventListeners() {
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPen);
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePen);
     interactiveCanvas.removeEventListener('mouseup', onMouseUpOutPen);
@@ -152,6 +141,18 @@ function switchType(typeOfdrawing) {
 
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPolygon);
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePolygon);
+}
+
+function switchType(typeOfdrawing) {
+    // clear canvas only if the drawing was not completed
+    if (wasFirstClick) {
+        clearInteractiveLayer();
+        clearLayers(activeCanvas.getAttribute("layer"));
+        wasFirstClick = false;
+    }
+
+    // remove all event listeners
+    removeEventListeners();
 
     switch (typeOfdrawing) {
         case "pen":
@@ -171,8 +172,6 @@ function switchType(typeOfdrawing) {
         case "polygon":
             interactiveCanvas.addEventListener('mousedown', onMouseDownPolygon);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePolygon);
-            break;
-        default:
             break;
     }
 }
@@ -366,12 +365,16 @@ function addLayer() {
 
     layerCount++;
 
-    if (layerCount >= 1) {
-        selectLayer(layerNumber);
-        switchActiveCanvas(layerNumber);
-        disableButtons(false);
-    }
-
+    selectLayer(layerNumber);
+    switchActiveCanvas(layerNumber);
+    disableButtons(false);
+    
+    // TODO
+    $(".radio").each((el) => {
+        if (el.attr("checked") == "checked")
+            console.log("found");
+    })
+    
     layerNumber++;
 }
 
@@ -397,8 +400,7 @@ function removeAllLayers() {
         wasFirstClick = false;
     }
 
-    // switchType with no argument to remove event listeners
-    switchType();
+    removeEventListeners();
     disableButtons(true);
 }
 
@@ -422,8 +424,7 @@ function removeSelectedLayers() {
         switchActiveCanvas();
     }
     else {
-        // switchType with no argument to remove event listeners
-        switchType();
+        removeEventListeners();
         disableButtons(true);
     }
 }
