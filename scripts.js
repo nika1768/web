@@ -74,10 +74,13 @@ $('form input[type="radio"]').each(function () {
 })
 
 function disableButtons(bool) {
-    document.getElementsByName("typeOfdrawing").forEach((elem) => elem.disabled = bool);
+    document.getElementsByName("typeOfDrawing").forEach((elem) => elem.disabled = bool);
     document.getElementById("removeSelectedLayersBtn").disabled = bool;
     document.getElementById("removeAllLayersBtn").disabled = bool;
     document.getElementById("clearBtn").disabled = bool;
+
+    if (!bool)
+        $("input[name=typeOfDrawing][checked=checked]")[0].click();
 }
 
 function selectVideo() {
@@ -143,7 +146,7 @@ function removeEventListeners() {
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePolygon);
 }
 
-function switchType(typeOfdrawing) {
+function switchType(typeOfDrawing) {
     // clear canvas only if the drawing was not completed
     if (wasFirstClick) {
         clearInteractiveLayer();
@@ -154,7 +157,7 @@ function switchType(typeOfdrawing) {
     // remove all event listeners
     removeEventListeners();
 
-    switch (typeOfdrawing) {
+    switch (typeOfDrawing) {
         case "pen":
             interactiveCanvas.addEventListener('mousedown', onMouseDownPen);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePen);
@@ -351,7 +354,7 @@ function onMouseMovePolygon(e) {
 // layers
 
 function addLayer() {
-    let newLayerItem = $(`<li>Layer${layerNumber}</li>`)
+    let newLayerItem = $(`<li>Layer ${layerNumber}</li>`)
         .addClass("layerItem")
         .attr("layer", layerNumber);
     $("#layerList").append(newLayerItem);
@@ -362,19 +365,12 @@ function addLayer() {
         .attr("width", canvasWidth)
         .attr("height", canvasHeight);
     $("#canvasWrapper").append(newLayerCanvas);
-
-    layerCount++;
-
+    
     selectLayer(layerNumber);
     switchActiveCanvas(layerNumber);
     disableButtons(false);
-    
-    // TODO
-    $(".radio").each((el) => {
-        if (el.attr("checked") == "checked")
-            console.log("found");
-    })
-    
+
+    layerCount++;
     layerNumber++;
 }
 
