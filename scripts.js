@@ -60,6 +60,20 @@ $(document).keyup(function (e) {
 
 // Key Manager End
 
+let mouseIsDown = false;
+
+$(document).mousedown(function (e) {
+    mouseIsDown = true;
+    console.log("mouse is down");
+})
+
+$(document).mouseup(function (e) {
+    mouseIsDown = false;
+    console.log("mouse is up");
+})
+
+
+
 $(document).ready(function () {
     disableButtons(true);
     switchType("pen");
@@ -131,6 +145,10 @@ function removeEventListeners() {
 
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPolygon);
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePolygon);
+
+    interactiveCanvas.removeEventListener('mouseenter', onMouseEnterDirection);
+    interactiveCanvas.removeEventListener('mouseout', onMouseOutDirection);
+    interactiveCanvas.removeEventListener('mousemove', onMouseMoveDirection);
 }
 
 function switchType(typeOfDrawing) {
@@ -162,6 +180,10 @@ function switchType(typeOfDrawing) {
             interactiveCanvas.addEventListener('mousedown', onMouseDownPolygon);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePolygon);
             break;
+        case "direction":
+            interactiveCanvas.addEventListener('mouseenter', onMouseEnterDirection);
+            interactiveCanvas.addEventListener('mouseout', onMouseOutDirection);
+            interactiveCanvas.addEventListener('mousemove', onMouseMoveDirection);
         case "ellipse":
             break;
     }
@@ -356,6 +378,64 @@ function onMouseMovePolygon(e) {
             [x, y] = [px, py];
         }
 
+        interactiveContext.beginPath();
+        interactiveContext.moveTo(fx, fy);
+        interactiveContext.lineTo(x, y);
+        interactiveContext.closePath();
+        interactiveContext.stroke();
+    }
+}
+
+// direction
+
+function onMouseEnterDirection(e) {
+    if (mouseIsDown) {
+        addCanvas();
+        addPredicate("direction");
+        disableButtons(false);
+
+        const rect = activeCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        console.log("Coordinate x: " + x, "Coordinate y: " + y);
+    
+        [fx, fy] = [x, y];
+
+        activeContext.beginPath();
+        activeContext.arc(x, y, 5, 0, 2 * Math.PI);
+        activeContext.fill();
+        activeContext.stroke();
+    }
+}
+
+function onMouseOutDirection(e) {
+    if (mouseIsDown) {
+        const rect = activeCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        
+        activeContext.beginPath();
+        activeContext.moveTo(fx, fy);
+        activeContext.lineTo(x, y);
+        activeContext.stroke();
+        [fx, fy] = [x, y];
+
+        activeContext.beginPath();
+        activeContext.arc(x, y, 5, 0, 2 * Math.PI);
+        activeContext.fill();
+        activeContext.stroke();
+    
+        clearInteractiveLayer();
+    }
+}
+
+function onMouseMoveDirection(e) {
+    if (mouseIsDown) {
+        clearInteractiveLayer();
+        const rect = interactiveCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+    
         interactiveContext.beginPath();
         interactiveContext.moveTo(fx, fy);
         interactiveContext.lineTo(x, y);
