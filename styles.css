@@ -15,7 +15,7 @@ canvas {
     position: absolute;
 }
 
-.layerItem {
+.predicateItem {
     cursor: pointer;
 }
 
@@ -27,7 +27,7 @@ canvas {
     z-index: 5;
 }
 
-#layerManager {
+#predicateManager {
     padding-left: 690px;
     float: left;
 }

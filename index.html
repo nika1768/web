@@ -18,8 +18,6 @@
 
     <input id="selectVideoBtn" type="button" onclick="selectVideo()" value="Select"></input>
 
-    <input id="clearBtn" type="button" onclick="clearCanvases()" value="Clear All"></input>
-
     <form name="radioForm">
         <!-- Types of drawing -->
         <input type="radio" id="penRadio" name="typeOfDrawing" value="pen" checked="checked">
@@ -29,24 +27,22 @@
         <input type="radio" id="linesRadio" name="typeOfDrawing" value="lines">
         <label for="lines">Lines</label><br>
         <input type="radio" id="polygonRadio" name="typeOfDrawing" value="polygon">
-        <label for="polygon">Polygon</label>
+        <label for="polygon">Polygon</label><br>
+        <input type="radio" id="ellipseRadio" name="typeOfDrawing" value="ellipse">
+        <label for="ellipse">Ellipse</label>
     </form>
 
     <div id="canvasWrapper" class="container">
             <canvas id="imageCanvas" width="672" height="378"></canvas>
             <canvas id="interactiveCanvas" width="672" height="378"></canvas>
-            <!--<canvas class="layerCanvas" layer="0" width="672" height="378"></canvas>-->
     </div>
 
-    <div id="layerManager">
-        <div id="layerManagerMenu">
-            <input id="addLayerBtn" type="button" value="Add spacial predicate" onclick="addLayer()"/>
-            <input id="removeSelectedLayersBtn" type="button" value="Remove Selected Layers" onclick="removeSelectedLayers()"/>
-            <input id="removeAllLayersBtn" type="button" value="Remove All Layers" onclick="removeAllLayers()"/>
+    <div id="predicateManager">
+        <div id="predicateManagerMenu">
+            <input id="removeSelectedPredicatesBtn" type="button" value="Remove selected predicates" onclick="removeSelectedPredicates()"/>
+            <input id="removeAllPredicatesBtn" type="button" value="Remove all predicates" onclick="removeAllPredicates()"/>
         </div>
-        <ul id="layerList">
-            <!-- <li class="layerItem selected" layer="0">Layer0</li> -->
-        </ul>
+        <ul id="predicateList"></ul>
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>

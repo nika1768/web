@@ -28,8 +28,7 @@ let pdeltay = 10;
 
 let isMouseDown = false;
 
-let layerCount = 0;
-let layerNumber = 0;
+let predicateNumber = 0;
 
 let activeCanvas;
 let activeContext;
@@ -39,9 +38,9 @@ jQuery.fn.extend({
     clearContext2d: function () { this.each(function () { this.getContext("2d").clearRect(0, 0, this.width, this.height) }) }
 })
 
-$("#layerList").on('click', ".layerItem", function () {
-    //selectLayer($(this).attr("layer"));
-    selectLayer(parseInt($(this).attr("layer")));
+$("#predicateList").on('click', ".predicateItem", function () {
+    //selectPredicate($(this).attr("layer"));
+    selectPredicate(parseInt($(this).attr("layer")));
 })
 
 // Key Manager
@@ -74,13 +73,8 @@ $('form input[type="radio"]').each(function () {
 })
 
 function disableButtons(bool) {
-    document.getElementsByName("typeOfDrawing").forEach((elem) => elem.disabled = bool);
-    document.getElementById("removeSelectedLayersBtn").disabled = bool;
-    document.getElementById("removeAllLayersBtn").disabled = bool;
-    document.getElementById("clearBtn").disabled = bool;
-
-    if (!bool)
-        $("input[name=typeOfDrawing][checked=checked]")[0].click();
+    document.getElementById("removeSelectedPredicatesBtn").disabled = bool;
+    document.getElementById("removeAllPredicatesBtn").disabled = bool;
 }
 
 function selectVideo() {
@@ -89,11 +83,10 @@ function selectVideo() {
     //selectVideoButton.disabled = true;
     //videoSelector.disabled = true;
 
-    layerCount = 0;
-    layerNumber = 0;
+    predicateNumber = 0;
 
-    removeAllLayers();
-    addLayer();
+    removeAllPredicates();
+    //addPredicate();
     switchType("pen");
 
     image.onload = function () {
@@ -103,12 +96,6 @@ function selectVideo() {
     }
 
     image.src = "http://195.113.19.174/camera.php?name=" + videoSelector.value;
-}
-
-function clearCanvases() {
-    clearInteractiveLayer();
-    clearLayers();
-    wasFirstClick = false;
 }
 
 function clearInteractiveLayer() {
@@ -121,11 +108,11 @@ function clearInteractiveLayer() {
  */
 function clearLayers(idxs) {
     if (!idxs) {
-        $("#canvasWrapper .layerCanvas").clearContext2d();
+        $("#canvasWrapper .predicateCanvas").clearContext2d();
     }
     else {
         for (idx of idxs) {
-            $(`#canvasWrapper .layerCanvas[layer = ${idx}]`).clearContext2d();
+            $(`#canvasWrapper .predicateCanvas[layer = ${idx}]`).clearContext2d();
         }
     }
 }
@@ -154,7 +141,6 @@ function switchType(typeOfDrawing) {
         wasFirstClick = false;
     }
 
-    // remove all event listeners
     removeEventListeners();
 
     switch (typeOfDrawing) {
@@ -176,6 +162,8 @@ function switchType(typeOfDrawing) {
             interactiveCanvas.addEventListener('mousedown', onMouseDownPolygon);
             interactiveCanvas.addEventListener('mousemove', onMouseMovePolygon);
             break;
+        case "ellipse":
+            break;
     }
 }
 
@@ -185,6 +173,9 @@ function onMouseDownPen(e) {
     // override default behaviour - move the selection by moving the mouse
     e.preventDefault();
     isMouseDown = true;
+    addCanvas();
+    addPredicate("pen");
+    disableButtons(false);
     const rect = activeCanvas.getBoundingClientRect();
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
@@ -212,6 +203,9 @@ function onMouseMovePen(e) {
 // Line
 
 function onMouseDownLine(e) {
+    if (!wasFirstClick)
+        addCanvas();
+
     // set up current x, y
     const rect = activeCanvas.getBoundingClientRect();
     let x = e.clientX - rect.left;
@@ -222,6 +216,9 @@ function onMouseDownLine(e) {
         // create initiating point
         [fx, fy] = [x, y];
         wasFirstClick = true;
+
+        addPredicate("line");
+        disableButtons(false);
     }
     else {
         clearInteractiveLayer();
@@ -253,6 +250,11 @@ function onMouseMoveLine(e) {
 // Lines
 
 function onMouseDownLines(e) {
+
+    // TODO
+    if (!wasFirstClick)
+        addCanvas();
+
     const rect = activeCanvas.getBoundingClientRect();
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
@@ -260,6 +262,9 @@ function onMouseDownLines(e) {
     if (!wasFirstClick) {
         [fx, fy] = [x, y];
         wasFirstClick = true;
+
+        addPredicate("lines");
+        disableButtons(false);
     }
     else {
         if (isShiftDown) {
@@ -294,6 +299,11 @@ function onMouseMoveLines(e) {
 // Polygon
 
 function onMouseDownPolygon(e) {
+
+    // TODO
+    if (!wasFirstClick)
+        addCanvas();
+
     const rect = activeCanvas.getBoundingClientRect();
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
@@ -303,6 +313,9 @@ function onMouseDownPolygon(e) {
         [px, py] = [x, y];
         [fx, fy] = [x, y];
         wasFirstClick = true;
+
+        addPredicate("polygon");
+        disableButtons(false);
     }
     else {
         // if new point is close enough to the polygon initial point and shift is not pressed, close it
@@ -351,44 +364,43 @@ function onMouseMovePolygon(e) {
     }
 }
 
-// layers
+// -------------------------------------------------------------------------------------------------------------
+// spacial predicates
 
-function addLayer() {
-    let newLayerItem = $(`<li>Layer ${layerNumber}</li>`)
-        .addClass("layerItem")
-        .attr("layer", layerNumber);
-    $("#layerList").append(newLayerItem);
+function addPredicate(typeOfDrawing) {
+    let newPredicateItem = $(`<li>sp ${predicateNumber}: ${typeOfDrawing}</li>`)
+        .addClass("predicateItem")
+        .attr("layer", predicateNumber);
+    $("#predicateList").append(newPredicateItem);
 
-    let newLayerCanvas = $("<canvas></canvas>")
-        .addClass("layerCanvas")
-        .attr("layer", layerNumber)
-        .attr("width", canvasWidth)
-        .attr("height", canvasHeight);
-    $("#canvasWrapper").append(newLayerCanvas);
-    
-    selectLayer(layerNumber);
-    switchActiveCanvas(layerNumber);
-    disableButtons(false);
-
-    layerCount++;
-    layerNumber++;
+    selectPredicate(predicateNumber);
+    predicateNumber++;
 }
 
-function selectLayer(layerIdx) {
+function addCanvas() {
+    let newPredicateCanvas = $("<canvas></canvas>")
+    .addClass("predicateCanvas")
+    .attr("layer", predicateNumber)
+    .attr("width", canvasWidth)
+    .attr("height", canvasHeight);
+    $("#canvasWrapper").append(newPredicateCanvas);
+
+    switchActiveCanvas(predicateNumber);
+}
+
+function selectPredicate(predicateIdx) {
     if (isCtrlDown) {
-        $(`#layerList .layerItem[layer = ${layerIdx}]`).addClass("selected");
+        $(`#predicateList .predicateItem[layer = ${predicateIdx}]`).addClass("selected");
     }
     else {
-        $("#layerList .layerItem.selected").removeClass("selected");
-        $(`#layerList .layerItem[layer = ${layerIdx}]`).addClass("selected");
-        switchActiveCanvas(layerIdx);
+        $("#predicateList .predicateItem.selected").removeClass("selected");
+        $(`#predicateList .predicateItem[layer = ${predicateIdx}]`).addClass("selected");
     }
 }
 
-function removeAllLayers() {
-    $("#layerList .layerItem").remove();
-    $("#canvasWrapper .layerCanvas").remove();
-    layerCount = 0;
+function removeAllPredicates() {
+    $("#predicateList .predicateItem").remove();
+    $("#canvasWrapper .predicateCanvas").remove();
 
     // clean up interactive layer
     if (wasFirstClick) {
@@ -396,16 +408,14 @@ function removeAllLayers() {
         wasFirstClick = false;
     }
 
-    removeEventListeners();
     disableButtons(true);
 }
 
-function removeSelectedLayers() {
-    $("#layerList .layerItem").each(function () {
+function removeSelectedPredicates() {
+    $("#predicateList .predicateItem").each(function () {
         if (this.classList.contains("selected")) {
             this.remove();
-            layerCount--;
-            $(`#canvasWrapper .layerCanvas[layer=${this.getAttribute("layer")}]`).remove();
+            $(`#canvasWrapper .predicateCanvas[layer=${this.getAttribute("layer")}]`).remove();
         }
     })
 
@@ -415,33 +425,17 @@ function removeSelectedLayers() {
         wasFirstClick = false;
     }
 
-    // at least one layerItem exists - switch active canvas
-    if ($("#layerList .layerItem").length) {
-        switchActiveCanvas();
+    // if at least one predicateItem exists - select the last one
+    if ($("#predicateList .predicateItem").length) {
+        let layerToSelect = $("#predicateList .predicateItem").last().attr("layer");
+        selectPredicate(layerToSelect);
     }
     else {
-        removeEventListeners();
         disableButtons(true);
     }
 }
 
-function switchActiveCanvas(layerIdx) {
-    // index is not specified, find some index
-    if (!layerIdx) {
-        let layerToSelect;
-        // at least one layerItem is selected - switch active canvas to the first selected one
-        if ($("#layerList .layerItem").hasClass("selected")) {
-            layerToSelect = $("#layerList .layerItem.selected").first();
-            layerIdx = layerToSelect.attr("layer");
-        }
-        // nothing is selected, select the first one from the list
-        else {
-            layerToSelect = $("#layerList .layerItem").first();
-            layerToSelect.addClass("selected");
-            layerIdx = layerToSelect.attr("layer");
-        }
-    }
-
-    activeCanvas = $(`#canvasWrapper .layerCanvas[layer = ${layerIdx}]`)[0];
+function switchActiveCanvas(predicateIdx) {
+    activeCanvas = $(`#canvasWrapper .predicateCanvas[layer = ${predicateIdx}]`)[0];
     activeContext = activeCanvas.getContext("2d");
 }
