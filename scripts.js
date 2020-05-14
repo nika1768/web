@@ -1,3 +1,145 @@
+// -------------------------------------------------------------------------------------------------------------
+// Classes:
+
+class Point {
+    constructor(X, Y) {
+        this.X = X;
+        this.Y = Y;
+    }
+}
+
+class Polynom {
+    constructor(id, points, action) {
+        this.id = id;
+        this.points = points;
+        this.action = action;
+    }
+
+    ToString() {
+        let result = "polygon " + this.id + " (";
+        for (i = 0; i < this.points.length - 1; i++) {
+            result = result + "(" + this.points[i].X + "," + this.points[i].Y + "),";
+        }
+        result = result + "(" + this.points[points.length].X + "," + this.points[points.length].Y + "))";
+        return result;
+    }
+}
+
+class Polynoms {
+    constructor() {
+        this.list = [];
+    }
+
+    AddPolynom(id, points, action) {
+        this.list.push(new Polynom(id, points, action));
+    }
+
+    RemoveEverything() {
+        this.list = [];
+    }
+
+    RemoveById(ids) {
+        this.list = this.list.filter(function (item) {
+            return !ids.includes(item.id);
+        })
+    }
+}
+
+class Line {
+    constructor(id, point1, point2, action) {
+        this.id = id;
+        this.point1 = point1;
+        this.point2 = point2;
+        this.action = action;
+    }
+
+    ToString() {
+        let result = "line " + this.id + " ((" + this.point1.X + "," + this.point1.Y + "),(" + this.point2.X + "," + this.point2.Y + "))";
+        return result;
+    }
+}
+
+class Lines {
+    constructor() {
+        this.list = [];
+    }
+
+    AddLine(id, point1, point2, action) {
+        this.list.push(new Line(id, point1, point2, action));
+    }
+
+    RemoveEverything() {
+        this.list = [];
+    }
+
+    RemoveById(ids) {
+        this.list = this.list.filter(function (item) {
+            return !ids.includes(item.id);
+        })
+    }
+}
+
+class Circle {
+    constructor(id, point, diameter, action) {
+        this.id = id;
+        this.point = point;
+        this.diameter = diameter;
+        this.action = action;
+    }
+
+    ToString() {
+        let result = "circle " + this.id + " ((" + this.point.X + "," + this.point.Y + ")," + this.diameter + ")";
+        return result;
+    }
+}
+
+class Circles {
+    constructor() {
+        this.list = [];
+    }
+
+    AddCircle(id, point, diameter, action) {
+        this.list.push(new Circle(id, point, diameter, action));
+    }
+
+    RemoveEverything() {
+        this.list = [];
+    }
+
+    RemoveById(ids) {
+        this.list = this.list.filter(function (item) {
+            return !ids.includes(item.id);
+        })
+    }
+}
+
+class selectedItems {
+    constructor() {
+        this.list = [];
+    }
+
+    AddItem(name) {
+        this.list.push(name);
+    }
+
+    ToString() {
+        result = "selected(";
+        for (i = 0; i < this.list.length - 1; i++) {
+            result = result + this.list[i] + ",";
+        }
+        result = result + this.list[this.list.length] + ")";
+        return result;
+    }
+}
+
+// Global varibales: 
+let selectedItem = new selectedItems(); // pripraveno pro id/class/..., jenom do pole vl
+let points = [];
+let polynoms = new Polynoms();
+let lines = new Lines();
+let circles = new Circles();
+
+// -------------------------------------------------------------------------------------------------------------
 // Constants:
 
 // 960 x 540
@@ -43,7 +185,8 @@ $("#predicateList").on('click', ".predicateItem", function () {
     selectPredicate(parseInt($(this).attr("layer")));
 })
 
-// Key Manager
+// -------------------------------------------------------------------------------------------------------------
+// Key Manager:
 
 let isShiftDown = false;
 let isCtrlDown = false;
@@ -60,23 +203,9 @@ $(document).keyup(function (e) {
 
 // Key Manager End
 
-let mouseIsDown = false;
-
-$(document).mousedown(function (e) {
-    mouseIsDown = true;
-    console.log("mouse is down");
-})
-
-$(document).mouseup(function (e) {
-    mouseIsDown = false;
-    console.log("mouse is up");
-})
-
-
-
 $(document).ready(function () {
     disableButtons(true);
-    switchType("pen");
+    switchType("line");
 })
 
 $('form input[type="radio"]').each(function () {
@@ -112,15 +241,15 @@ function selectVideo() {
     image.src = "http://195.113.19.174/camera.php?name=" + videoSelector.value;
 }
 
-function clearInteractiveLayer() {
+function clearInteractiveCanvas() {
     interactiveContext.clearRect(0, 0, canvasWidth, canvasHeight);
 }
 
 /**
- * Clear layer canvases.
- * @param {number[]} idxs Indexes of layers to clear.
+ * Clear predicate canvases.
+ * @param {number[]} idxs Indexes of predicatess to clear.
  */
-function clearLayers(idxs) {
+function clearPredicateCanvases(idxs) {
     if (!idxs) {
         $("#canvasWrapper .predicateCanvas").clearContext2d();
     }
@@ -146,16 +275,18 @@ function removeEventListeners() {
     interactiveCanvas.removeEventListener('mousedown', onMouseDownPolygon);
     interactiveCanvas.removeEventListener('mousemove', onMouseMovePolygon);
 
-    interactiveCanvas.removeEventListener('mouseenter', onMouseEnterDirection);
-    interactiveCanvas.removeEventListener('mouseout', onMouseOutDirection);
+    interactiveCanvas.removeEventListener('mousedown', onMouseDownCircle);
+    interactiveCanvas.removeEventListener('mousemove', onMouseMoveCircle);
+
+    interactiveCanvas.removeEventListener('mousedown', onMouseDownDirection);
     interactiveCanvas.removeEventListener('mousemove', onMouseMoveDirection);
 }
 
 function switchType(typeOfDrawing) {
     // clear canvas only if the drawing was not completed
     if (wasFirstClick) {
-        clearInteractiveLayer();
-        clearLayers(activeCanvas.getAttribute("layer"));
+        clearInteractiveCanvas();
+        clearPredicateCanvases(activeCanvas.getAttribute("layer"));
         wasFirstClick = false;
     }
 
@@ -181,10 +312,12 @@ function switchType(typeOfDrawing) {
             interactiveCanvas.addEventListener('mousemove', onMouseMovePolygon);
             break;
         case "direction":
-            interactiveCanvas.addEventListener('mouseenter', onMouseEnterDirection);
-            interactiveCanvas.addEventListener('mouseout', onMouseOutDirection);
+            interactiveCanvas.addEventListener('mousedown', onMouseDownDirection);
             interactiveCanvas.addEventListener('mousemove', onMouseMoveDirection);
-        case "ellipse":
+            break;
+        case "circle":
+            interactiveCanvas.addEventListener('mousedown', onMouseDownCircle);
+            interactiveCanvas.addEventListener('mousemove', onMouseMoveCircle);
             break;
     }
 }
@@ -238,12 +371,14 @@ function onMouseDownLine(e) {
         // create initiating point
         [fx, fy] = [x, y];
         wasFirstClick = true;
+        points = [];
+        points.push(new Point(x, y));
 
         addPredicate("line");
         disableButtons(false);
     }
     else {
-        clearInteractiveLayer();
+        clearInteractiveCanvas();
         // draw a line from the initiating point
         activeContext.beginPath();
         activeContext.moveTo(fx, fy);
@@ -251,12 +386,17 @@ function onMouseDownLine(e) {
         activeContext.closePath();
         activeContext.stroke();
         wasFirstClick = false;
+        points.push(new Point(x, y));
+
+        // add this line to lines
+        lines.AddLine(predicateNumber - 1, points[0], points[1], undefined);
+        console.log("line added to lines");
     }
 }
 
 function onMouseMoveLine(e) {
     if (wasFirstClick) {
-        clearInteractiveLayer();
+        clearInteractiveCanvas();
         const rect = interactiveCanvas.getBoundingClientRect();
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
@@ -272,8 +412,6 @@ function onMouseMoveLine(e) {
 // Lines
 
 function onMouseDownLines(e) {
-
-    // TODO
     if (!wasFirstClick)
         addCanvas();
 
@@ -291,7 +429,7 @@ function onMouseDownLines(e) {
     else {
         if (isShiftDown) {
             wasFirstClick = false;
-            clearInteractiveLayer();
+            clearInteractiveCanvas();
         }
 
         activeContext.beginPath();
@@ -305,7 +443,7 @@ function onMouseDownLines(e) {
 
 function onMouseMoveLines(e) {
     if (wasFirstClick) {
-        clearInteractiveLayer();
+        clearInteractiveCanvas();
         const rect = interactiveCanvas.getBoundingClientRect();
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
@@ -321,8 +459,6 @@ function onMouseMoveLines(e) {
 // Polygon
 
 function onMouseDownPolygon(e) {
-
-    // TODO
     if (!wasFirstClick)
         addCanvas();
 
@@ -335,6 +471,9 @@ function onMouseDownPolygon(e) {
         [px, py] = [x, y];
         [fx, fy] = [x, y];
         wasFirstClick = true;
+
+        points = [];
+        points.push(new Point(x, y));
 
         addPredicate("polygon");
         disableButtons(false);
@@ -349,8 +488,13 @@ function onMouseDownPolygon(e) {
             [x, y] = [px, py];
             wasFirstClick = false;
 
+            // add this polygon to polygons
+            polynoms.AddPolynom(predicateNumber - 1, points, undefined);
+            console.log("polygon added to polygons");
+
+
             // also get rid of the interactive line
-            clearInteractiveLayer();
+            clearInteractiveCanvas();
         }
 
         activeContext.beginPath();
@@ -359,12 +503,15 @@ function onMouseDownPolygon(e) {
         activeContext.closePath();
         activeContext.stroke();
         [fx, fy] = [x, y];
+
+        if (wasFirstClick)
+            points.push(new Point(x, y));
     }
 }
 
 function onMouseMovePolygon(e) {
     if (wasFirstClick) {
-        clearInteractiveLayer();
+        clearInteractiveCanvas();
         const rect = interactiveCanvas.getBoundingClientRect();
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
@@ -386,66 +533,97 @@ function onMouseMovePolygon(e) {
     }
 }
 
-// direction
-
-function onMouseEnterDirection(e) {
-    if (mouseIsDown) {
+// Direction
+function onMouseDownDirection(e) {
+    if (!wasFirstClick) {
         addCanvas();
         addPredicate("direction");
         disableButtons(false);
-
-        const rect = activeCanvas.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-        console.log("Coordinate x: " + x, "Coordinate y: " + y);
-    
-        [fx, fy] = [x, y];
-
-        activeContext.beginPath();
-        activeContext.arc(x, y, 5, 0, 2 * Math.PI);
-        activeContext.fill();
-        activeContext.stroke();
+        wasFirstClick = true;
     }
-}
-
-function onMouseOutDirection(e) {
-    if (mouseIsDown) {
-        const rect = activeCanvas.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-        
-        activeContext.beginPath();
-        activeContext.moveTo(fx, fy);
-        activeContext.lineTo(x, y);
-        activeContext.stroke();
-        [fx, fy] = [x, y];
-
-        activeContext.beginPath();
-        activeContext.arc(x, y, 5, 0, 2 * Math.PI);
-        activeContext.fill();
-        activeContext.stroke();
-    
-        clearInteractiveLayer();
+    else {
+        wasFirstClick = false;
     }
+
+    const rect = interactiveCanvas.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    activeContext.beginPath();
+    activeContext.arc(x, y, 5, 0, 2 * Math.PI);
+    activeContext.fill();
+    activeContext.stroke();
+
 }
 
 function onMouseMoveDirection(e) {
-    if (mouseIsDown) {
-        clearInteractiveLayer();
+    if (wasFirstClick) {
+
+        clearInteractiveCanvas();
         const rect = interactiveCanvas.getBoundingClientRect();
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
-    
+
         interactiveContext.beginPath();
-        interactiveContext.moveTo(fx, fy);
-        interactiveContext.lineTo(x, y);
-        interactiveContext.closePath();
+        interactiveContext.arc(x, y, 5, 0, 2 * Math.PI);
+        interactiveContext.fill();
+        interactiveContext.stroke();
+    }
+
+}
+
+// Circle
+function onMouseDownCircle(e) {
+    if (!wasFirstClick) {
+        addCanvas();
+    }
+
+    const rect = activeCanvas.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    if (!wasFirstClick) {
+        [fx, fy] = [x, y];
+        wasFirstClick = true;
+
+        addPredicate("circle");
+        disableButtons(false);
+    }
+    else {
+        clearInteractiveCanvas();
+
+        let [cx, cy] = [(x + fx) / 2, (y + fy) / 2];
+        let d = Math.sqrt((x - fx) ** 2 + (y - fy) ** 2);
+
+        activeContext.beginPath();
+        activeContext.arc(cx, cy, d / 2, 0, 2 * Math.PI);
+        activeContext.stroke();
+        wasFirstClick = false;
+
+        circles.AddCircle(predicateNumber - 1, new Point(cx, cy), d, undefined);
+        console.log("circle added to circles");
+    }
+}
+
+function onMouseMoveCircle(e) {
+    if (wasFirstClick) {
+        const rect = activeCanvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+
+        clearInteractiveCanvas();
+
+        let [cx, cy] = [(x + fx) / 2, (y + fy) / 2];
+        let d = Math.sqrt((x - fx) ** 2 + (y - fy) ** 2);
+
+        interactiveContext.beginPath();
+        interactiveContext.arc(cx, cy, d / 2, 0, 2 * Math.PI);
         interactiveContext.stroke();
     }
 }
 
 // -------------------------------------------------------------------------------------------------------------
-// spacial predicates
+// Spacial predicates:
 
 function addPredicate(typeOfDrawing) {
     let newPredicateItem = $(`<li>sp ${predicateNumber}: ${typeOfDrawing}</li>`)
@@ -459,10 +637,10 @@ function addPredicate(typeOfDrawing) {
 
 function addCanvas() {
     let newPredicateCanvas = $("<canvas></canvas>")
-    .addClass("predicateCanvas")
-    .attr("layer", predicateNumber)
-    .attr("width", canvasWidth)
-    .attr("height", canvasHeight);
+        .addClass("predicateCanvas")
+        .attr("layer", predicateNumber)
+        .attr("width", canvasWidth)
+        .attr("height", canvasHeight);
     $("#canvasWrapper").append(newPredicateCanvas);
 
     switchActiveCanvas(predicateNumber);
@@ -482,28 +660,41 @@ function removeAllPredicates() {
     $("#predicateList .predicateItem").remove();
     $("#canvasWrapper .predicateCanvas").remove();
 
-    // clean up interactive layer
+    // clean up interactive canvas
     if (wasFirstClick) {
-        clearInteractiveLayer();
+        clearInteractiveCanvas();
         wasFirstClick = false;
     }
+
+    lines.RemoveEverything();
+    polynoms.RemoveEverything();
+    circles.RemoveEverything();
 
     disableButtons(true);
 }
 
 function removeSelectedPredicates() {
+    let idxs = [];
+    let idx;
+
     $("#predicateList .predicateItem").each(function () {
         if (this.classList.contains("selected")) {
             this.remove();
-            $(`#canvasWrapper .predicateCanvas[layer=${this.getAttribute("layer")}]`).remove();
+            idx = parseInt(this.getAttribute("layer"));
+            idxs.push(idx);
+            $(`#canvasWrapper .predicateCanvas[layer=${idx}]`).remove();
         }
     })
 
-    // clean up interactive layer
+    // clean up interactive canvas
     if (wasFirstClick) {
-        clearInteractiveLayer();
+        clearInteractiveCanvas();
         wasFirstClick = false;
     }
+
+    lines.RemoveById(idxs);
+    polynoms.RemoveById(idxs);
+    circles.RemoveById(idxs);
 
     // if at least one predicateItem exists - select the last one
     if ($("#predicateList .predicateItem").length) {
