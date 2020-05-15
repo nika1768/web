@@ -6,9 +6,6 @@ canvas{
     margin-right: auto;
 
     cursor: crosshair;
-}
-
-canvas {
     position: absolute;
 }
 
@@ -25,6 +22,20 @@ canvas {
 }
 
 #predicateManager {
-    padding-left: 690px;
+    height: 600px;
+    float: left;
+    padding-right: 50px;
+}
+
+#canvasWrapper {
+    height: 500px;
+}
+
+.queryTextBoxes {
+    height: 200px;
+}
+
+#querySelectOptions {
+    padding-right: 50px;
     float: left;
 }

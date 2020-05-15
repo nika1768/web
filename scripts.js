@@ -8,7 +8,7 @@ class Point {
     }
 }
 
-class Polynom {
+class Polygon {
     constructor(id, points, action) {
         this.id = id;
         this.points = points;
@@ -17,21 +17,21 @@ class Polynom {
 
     ToString() {
         let result = "polygon " + this.id + " (";
-        for (i = 0; i < this.points.length - 1; i++) {
+        for (let i = 0; i < this.points.length - 1; i++) {
             result = result + "(" + this.points[i].X + "," + this.points[i].Y + "),";
         }
-        result = result + "(" + this.points[points.length].X + "," + this.points[points.length].Y + "))";
+        result = result + "(" + this.points[points.length - 1].X + "," + this.points[points.length - 1].Y + "))";
         return result;
     }
 }
 
-class Polynoms {
+class Polygons {
     constructor() {
         this.list = [];
     }
 
-    AddPolynom(id, points, action) {
-        this.list.push(new Polynom(id, points, action));
+    AddPolygon(id, points, action) {
+        this.list.push(new Polygon(id, points, action));
     }
 
     RemoveEverything() {
@@ -122,12 +122,21 @@ class selectedItems {
         this.list.push(name);
     }
 
+    RemoveItem(name) {
+        for (let i = 0; i < this.list.length; i++) {
+            if (this.list[i] == name) {
+                this.list.splice(i, 1);
+                return;
+            }
+        }
+    }
+
     ToString() {
-        result = "selected(";
-        for (i = 0; i < this.list.length - 1; i++) {
+        let result = "selected(";
+        for (let i = 0; i < this.list.length - 1; i++) {
             result = result + this.list[i] + ",";
         }
-        result = result + this.list[this.list.length] + ")";
+        result = result + this.list[this.list.length - 1] + ")";
         return result;
     }
 }
@@ -135,7 +144,7 @@ class selectedItems {
 // Global varibales: 
 let selectedItem = new selectedItems(); // pripraveno pro id/class/..., jenom do pole vl
 let points = [];
-let polynoms = new Polynoms();
+let polygons = new Polygons();
 let lines = new Lines();
 let circles = new Circles();
 
@@ -212,6 +221,17 @@ $('form input[type="radio"]').each(function () {
     this.addEventListener('change', function () {
         switchType(this.value);
         console.log(this.value);
+    })
+})
+
+$('#querySelectOptions input[type="checkbox"]').each(function () {
+    this.addEventListener("change", function () {
+        if (this.checked) {
+            selectedItem.AddItem(this.value);
+        }
+        else {
+            selectedItem.RemoveItem(this.value);
+        }
     })
 })
 
@@ -489,9 +509,8 @@ function onMouseDownPolygon(e) {
             wasFirstClick = false;
 
             // add this polygon to polygons
-            polynoms.AddPolynom(predicateNumber - 1, points, undefined);
+            polygons.AddPolygon(predicateNumber - 1, points, undefined);
             console.log("polygon added to polygons");
-
 
             // also get rid of the interactive line
             clearInteractiveCanvas();
@@ -667,7 +686,7 @@ function removeAllPredicates() {
     }
 
     lines.RemoveEverything();
-    polynoms.RemoveEverything();
+    polygons.RemoveEverything();
     circles.RemoveEverything();
 
     disableButtons(true);
@@ -693,7 +712,7 @@ function removeSelectedPredicates() {
     }
 
     lines.RemoveById(idxs);
-    polynoms.RemoveById(idxs);
+    polygons.RemoveById(idxs);
     circles.RemoveById(idxs);
 
     // if at least one predicateItem exists - select the last one

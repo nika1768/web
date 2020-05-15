@@ -9,42 +9,72 @@
 </head>
 
 <body>
-    <select id="videoSelector">
-        <option value="001_Canon_FHD.MP4">001_Canon_FHD.MP4</option>
-        <option value="002_Canon_FHD.MP4">002_Canon_FHD.MP4</option>
-        <option value="duke.mp4">duke.mp4</option>
-        <option value="orloj.mp4">orloj.mp4</option>
-    </select>
-
-    <input id="selectVideoBtn" type="button" onclick="selectVideo()" value="Select"></input>
-
-    <form name="radioForm">
-        <!-- Types of drawing -->
-        <!-- <input type="radio" id="penRadio" name="typeOfDrawing" value="pen"> -->
-        <!-- <label for="pen">Pen</label><br> -->
-        <input type="radio" id="lineRadio" name="typeOfDrawing" value="line" checked="checked">
-        <label for="line">Line</label><br>
-        <!-- <input type="radio" id="linesRadio" name="typeOfDrawing" value="lines"> -->
-        <!-- <label for="lines">Lines</label><br> -->
-        <input type="radio" id="polygonRadio" name="typeOfDrawing" value="polygon">
-        <label for="polygon">Polygon</label><br>
-        <!-- <input type="radio" id="directionRadio" name="typeOfDrawing" value="direction"> -->
-        <!-- <label for="direction">Direction</label><br> -->
-        <input type="radio" id="ellipseRadio" name="typeOfDrawing" value="circle">
-        <label for="circle">Circle</label>
-    </form>
-
-    <div id="canvasWrapper" class="container">
-            <canvas id="imageCanvas" width="672" height="378"></canvas>
-            <canvas id="interactiveCanvas" width="672" height="378"></canvas>
+    <div id="selectMenu">
+        <select id="videoSelector">
+            <option value="001_Canon_FHD.MP4">001_Canon_FHD.MP4</option>
+            <option value="002_Canon_FHD.MP4">002_Canon_FHD.MP4</option>
+            <option value="duke.mp4">duke.mp4</option>
+            <option value="orloj.mp4">orloj.mp4</option>
+        </select>
+    
+        <input id="selectVideoBtn" type="button" onclick="selectVideo()" value="Select"></input>
+    
+        <form name="radioForm">
+            <!-- Types of drawing -->
+            <!-- <input type="radio" id="penRadio" name="typeOfDrawing" value="pen"> -->
+            <!-- <label for="pen">Pen</label><br> -->
+            <input type="radio" id="lineRadio" name="typeOfDrawing" value="line" checked="checked">
+            <label for="line">Line</label><br>
+            <!-- <input type="radio" id="linesRadio" name="typeOfDrawing" value="lines"> -->
+            <!-- <label for="lines">Lines</label><br> -->
+            <input type="radio" id="polygonRadio" name="typeOfDrawing" value="polygon">
+            <label for="polygon">Polygon</label><br>
+            <!-- <input type="radio" id="directionRadio" name="typeOfDrawing" value="direction"> -->
+            <!-- <label for="direction">Direction</label><br> -->
+            <input type="radio" id="ellipseRadio" name="typeOfDrawing" value="circle">
+            <label for="circle">Circle</label>
+        </form>
     </div>
 
-    <div id="predicateManager">
-        <div id="predicateManagerMenu">
-            <input id="removeSelectedPredicatesBtn" type="button" value="Remove selected predicates" onclick="removeSelectedPredicates()"/>
-            <input id="removeAllPredicatesBtn" type="button" value="Remove all predicates" onclick="removeAllPredicates()"/>
+    <div id="canvasWrapper" class="container">
+        <canvas id="imageCanvas" width="672" height="378"></canvas>
+        <canvas id="interactiveCanvas" width="672" height="378"></canvas>
+    </div>
+
+    <div id="queryManager">
+        <div id="queryManagerMenu">
+
+            <div id="querySelectOptions">
+                <label>SELECT:</label><br>
+                <!-- form -->
+
+                <input type="checkbox" value="id">
+                <label for="id">Id</label><br>
+                <input type="checkbox" value="class">
+                <label for="class">Class</label><br>
+                <!-- TODO -->
+            </div>
+
+            <div id="predicateManager">
+                <label>WHERE:</label><br>
+                <div id="predicateManagerMenu">
+                    <input id="removeSelectedPredicatesBtn" type="button" value="Remove selected predicates" onclick="removeSelectedPredicates()"/>
+                    <input id="removeAllPredicatesBtn" type="button" value="Remove all predicates" onclick="removeAllPredicates()"/>
+                </div>
+                <ul id="predicateList"></ul>
+            </div>
+
         </div>
-        <ul id="predicateList"></ul>
+
+        <div id="queryGenerateMenu" class="queryTextBoxes">
+            <input id="generateQueryBtn" type="button" value="Generate query">
+            <textarea id="generateQueryTxt" rows="6" cols="50"></textarea>
+        </div>
+
+        <div id="queryExecuteMenu" class="queryTextBoxes">
+            <input id="executeQueryBtn" type="button" value="Execute query">
+            <textarea id="generateQueryTxt" rows="6" cols="50"></textarea>
+        </div>
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
