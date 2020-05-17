@@ -15,6 +15,11 @@ class Polygon {
         this.action = action;
     }
 
+    ChangeActionTo(action) {
+        this.action = action;
+        console.log(`action on polygon ${this.id} changed to ${action}`);
+    }
+
     ToString() {
         let result = "polygon " + this.id + " (";
         for (let i = 0; i < this.points.length - 1; i++) {
@@ -43,6 +48,10 @@ class Polygons {
             return !ids.includes(item.id);
         })
     }
+
+    FindLineWithId(id) {
+        return this.list.find(el => el.id == id);
+    }
 }
 
 class Line {
@@ -51,6 +60,11 @@ class Line {
         this.point1 = point1;
         this.point2 = point2;
         this.action = action;
+    }
+
+    ChangeActionTo(action) {
+        this.action = action;
+        console.log(`action on line ${this.id} changed to ${action}`);
     }
 
     ToString() {
@@ -77,6 +91,10 @@ class Lines {
             return !ids.includes(item.id);
         })
     }
+
+    FindLineWithId(id) {
+        return this.list.find(el => el.id == id);
+    }
 }
 
 class Circle {
@@ -85,6 +103,11 @@ class Circle {
         this.point = point;
         this.diameter = diameter;
         this.action = action;
+    }
+
+    ChangeActionTo(action) {
+        this.action = action;
+        console.log(`action on circle ${this.id} changed to ${action}`);
     }
 
     ToString() {
@@ -110,6 +133,10 @@ class Circles {
         this.list = this.list.filter(function (item) {
             return !ids.includes(item.id);
         })
+    }
+
+    FindLineWithId(id) {
+        return this.list.find(el => el.id == id);
     }
 }
 
@@ -210,11 +237,6 @@ jQuery.fn.extend({
 $("#predicateTable").on('click', "td:first-child", function () {
     //selectPredicate($(this).attr("layer"));
     selectPredicate(parseInt($(this).parent().attr("layer")));
-})
-
-$("#predicateTable").on('change', "td:nth-child(2)", function () {
-    console.log("choose action changed");
-    //changeAction();
 })
 
 $(document).ready(function () {
@@ -665,6 +687,7 @@ function addPredicate(typeOfDrawing) {
 }
 
 function choosePredicateSelector(typeOfDrawing) {
+    let id = predicateNumber;
     let result = $("<td>");
     switch(typeOfDrawing) {
         case "line":
@@ -672,20 +695,29 @@ function choosePredicateSelector(typeOfDrawing) {
                 $("<select>").attr("class", "lineSelector").attr("layer", predicateNumber)
                     .append($("<option>").attr("value", "none").text("none"))
                     .append($("<option>").attr("value", "crosses").text("crosses"))
+                    .change(function(e) {
+                        lines.FindLineWithId(id).ChangeActionTo(e.target.value);
+                    })
             );
             return result;
         case "polygon":
             result = result.append(
-                $("<select>").attr("class", "polygonSelector").attr("layer", predicateNumber)
+                $("<select>").attr("class", "polygonSelector")
                     .append($("<option>").attr("value", "none").text("none"))
                     .append($("<option>").attr("value", "contains").text("contains"))
+                    .change(function(e) {
+                        polygons.FindLineWithId(id).ChangeActionTo(e.target.value);
+                    })
             );
             return result;
         case "circle":
             result = result.append(
-                $("<select>").attr("class", "circleSelector").attr("layer", predicateNumber)
+                $("<select>").attr("class", "circleSelector")
                     .append($("<option>").attr("value", "none").text("none"))
                     .append($("<option>").attr("value", "contains").text("contains"))
+                    .change(function(e) {
+                        circles.FindLineWithId(id).ChangeActionTo(e.target.value);
+                    })
             );
             return result;
     }
