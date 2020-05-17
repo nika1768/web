@@ -13,8 +13,12 @@ canvas{
     cursor: pointer;
 }
 
-.selected {
+table tr.selected td:first-child {
     background-color: lightseagreen;
+}
+
+th, td, #predicateTable select {
+    width: 162px;
 }
 
 #interactiveCanvas {

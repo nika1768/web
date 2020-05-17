@@ -184,16 +184,6 @@ let predicateNumber = 0;
 let activeCanvas;
 let activeContext;
 
-jQuery.fn.extend({
-    context2d: function () { return this[0].getContext("2d") },
-    clearContext2d: function () { this.each(function () { this.getContext("2d").clearRect(0, 0, this.width, this.height) }) }
-})
-
-$("#predicateList").on('click', ".predicateItem", function () {
-    //selectPredicate($(this).attr("layer"));
-    selectPredicate(parseInt($(this).attr("layer")));
-})
-
 // -------------------------------------------------------------------------------------------------------------
 // Key Manager:
 
@@ -211,6 +201,21 @@ $(document).keyup(function (e) {
 })
 
 // Key Manager End
+
+jQuery.fn.extend({
+    context2d: function () { return this[0].getContext("2d") },
+    clearContext2d: function () { this.each(function () { this.getContext("2d").clearRect(0, 0, this.width, this.height) }) }
+})
+
+$("#predicateTable").on('click', "td:first-child", function () {
+    //selectPredicate($(this).attr("layer"));
+    selectPredicate(parseInt($(this).parent().attr("layer")));
+})
+
+$("#predicateTable").on('change', "td:nth-child(2)", function () {
+    console.log("choose action changed");
+    //changeAction();
+})
 
 $(document).ready(function () {
     disableButtons(true);
@@ -409,7 +414,7 @@ function onMouseDownLine(e) {
         points.push(new Point(x, y));
 
         // add this line to lines
-        lines.AddLine(predicateNumber - 1, points[0], points[1], undefined);
+        lines.AddLine(predicateNumber - 1, points[0], points[1], "none");
         console.log("line added to lines");
     }
 }
@@ -509,7 +514,7 @@ function onMouseDownPolygon(e) {
             wasFirstClick = false;
 
             // add this polygon to polygons
-            polygons.AddPolygon(predicateNumber - 1, points, undefined);
+            polygons.AddPolygon(predicateNumber - 1, points, "none");
             console.log("polygon added to polygons");
 
             // also get rid of the interactive line
@@ -619,7 +624,7 @@ function onMouseDownCircle(e) {
         activeContext.stroke();
         wasFirstClick = false;
 
-        circles.AddCircle(predicateNumber - 1, new Point(cx, cy), d, undefined);
+        circles.AddCircle(predicateNumber - 1, new Point(cx, cy), d, "none");
         console.log("circle added to circles");
     }
 }
@@ -645,13 +650,45 @@ function onMouseMoveCircle(e) {
 // Spacial predicates:
 
 function addPredicate(typeOfDrawing) {
-    let newPredicateItem = $(`<li>sp ${predicateNumber}: ${typeOfDrawing}</li>`)
+    let newPredicateTr = $("<tr>")
         .addClass("predicateItem")
         .attr("layer", predicateNumber);
-    $("#predicateList").append(newPredicateItem);
+
+    $("#predicateTable")//.find("tbody")
+        .append(newPredicateTr
+            .append($(`<td>sp ${predicateNumber}: ${typeOfDrawing}</td>`))
+            .append(choosePredicateSelector(typeOfDrawing))
+    );
 
     selectPredicate(predicateNumber);
     predicateNumber++;
+}
+
+function choosePredicateSelector(typeOfDrawing) {
+    let result = $("<td>");
+    switch(typeOfDrawing) {
+        case "line":
+            result = result.append(
+                $("<select>").attr("class", "lineSelector").attr("layer", predicateNumber)
+                    .append($("<option>").attr("value", "none").text("none"))
+                    .append($("<option>").attr("value", "crosses").text("crosses"))
+            );
+            return result;
+        case "polygon":
+            result = result.append(
+                $("<select>").attr("class", "polygonSelector").attr("layer", predicateNumber)
+                    .append($("<option>").attr("value", "none").text("none"))
+                    .append($("<option>").attr("value", "contains").text("contains"))
+            );
+            return result;
+        case "circle":
+            result = result.append(
+                $("<select>").attr("class", "circleSelector").attr("layer", predicateNumber)
+                    .append($("<option>").attr("value", "none").text("none"))
+                    .append($("<option>").attr("value", "contains").text("contains"))
+            );
+            return result;
+    }
 }
 
 function addCanvas() {
@@ -667,16 +704,16 @@ function addCanvas() {
 
 function selectPredicate(predicateIdx) {
     if (isCtrlDown) {
-        $(`#predicateList .predicateItem[layer = ${predicateIdx}]`).addClass("selected");
+        $(`#predicateTable .predicateItem[layer = ${predicateIdx}]`).addClass("selected");
     }
     else {
-        $("#predicateList .predicateItem.selected").removeClass("selected");
-        $(`#predicateList .predicateItem[layer = ${predicateIdx}]`).addClass("selected");
+        $("#predicateTable .predicateItem.selected").removeClass("selected");
+        $(`#predicateTable .predicateItem[layer = ${predicateIdx}]`).addClass("selected");
     }
 }
 
 function removeAllPredicates() {
-    $("#predicateList .predicateItem").remove();
+    $("#predicateTable .predicateItem").remove();
     $("#canvasWrapper .predicateCanvas").remove();
 
     // clean up interactive canvas
@@ -696,7 +733,7 @@ function removeSelectedPredicates() {
     let idxs = [];
     let idx;
 
-    $("#predicateList .predicateItem").each(function () {
+    $("#predicateTable .predicateItem").each(function () {
         if (this.classList.contains("selected")) {
             this.remove();
             idx = parseInt(this.getAttribute("layer"));
@@ -716,8 +753,8 @@ function removeSelectedPredicates() {
     circles.RemoveById(idxs);
 
     // if at least one predicateItem exists - select the last one
-    if ($("#predicateList .predicateItem").length) {
-        let layerToSelect = $("#predicateList .predicateItem").last().attr("layer");
+    if ($("#predicateTable .predicateItem").length) {
+        let layerToSelect = $("#predicateTable .predicateItem").last().attr("layer");
         selectPredicate(layerToSelect);
     }
     else {
